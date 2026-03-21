@@ -1,0 +1,461 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+abstract interface class RouterBridge {
+  bool isUsedRoute(RouteKey route);
+
+  void onRouteRemoved(RouteKey route);
+}
+
+class RouteKey {
+  final String name;
+  final String id;
+  final Object? args;
+
+  const RouteKey({required this.name, required this.id, this.args});
+
+  @override
+  String toString() => "$name#$id";
+}
+
+class RouteStack {
+  final List<RouteEntry> _routes = [];
+
+  List<RouteEntry> get routes => List.unmodifiable(_routes);
+
+  void push(RouteEntry entry) {
+    _routes.add(entry);
+  }
+
+  RouteEntry? pop() {
+    if (_routes.isEmpty) return null;
+    return _routes.removeLast();
+  }
+
+  void remove(RouteEntry entry) {
+    _routes.remove(entry);
+  }
+
+  bool get isEmpty => _routes.isEmpty;
+}
+
+class FlutterArtistRouteParser extends RouteInformationParser<RouteKey> {
+  @override
+  Future<RouteKey> parseRouteInformation(
+    RouteInformation routeInformation,
+  ) async {
+    final uri = routeInformation.uri;
+    final path = uri.path.isEmpty ? "/" : uri.path;
+    return RouteKey(name: path, id: "external");
+  }
+
+  @override
+  RouteInformation restoreRouteInformation(RouteKey configuration) {
+    return RouteInformation(uri: Uri.parse(configuration.name));
+  }
+}
+
+class FlutterArtistRouter extends ChangeNotifier {
+  final RouterBridge bridge;
+  final GuardRegistry guards;
+  final PageStack _pages = PageStack();
+  final OverlayManager overlays = OverlayManager();
+  final RouteRegistry routes;
+  int _idCounter = 0;
+
+  FlutterArtistRouter({
+    required this.bridge,
+    required this.guards,
+    required this.routes,
+  }) {
+    overlays.addListener(notifyListeners);
+  }
+
+  List<RouteEntry> get pages => _pages.routes;
+
+  /// MODULE
+  Future<RouteKey?> openModule(String name, WidgetBuilder builder) async {
+    final metadata = const RouteMetadata(kind: RouteKind.module);
+    final key = RouteKey(name: name, id: _nextId());
+    final entry = RouteEntry(key: key, builder: builder, metadata: metadata);
+    _pages.clear();
+    _pages.push(entry);
+    notifyListeners();
+    return key;
+  }
+
+  Future<RouteKey?> offNamed(String newRouteName) {
+    // TODO...
+    return openNamed(newRouteName);
+  }
+
+  Future<RouteKey?> offAllNamed(String newRouteName) {
+    // TODO...
+    return openNamed(newRouteName);
+  }
+
+  Future<RouteKey?> openNamed(String name) async {
+    final definition = routes.find(name);
+    if (definition == null) {
+      throw Exception("Route not found: $name");
+    }
+    final key = RouteKey(name: name, id: _nextId());
+    final entry = RouteEntry(
+      key: key,
+      builder: definition.builder,
+      metadata: definition.metadata,
+    );
+    if (definition.metadata.isModule) {
+      _pages.clear();
+    }
+    _pages.push(entry);
+    notifyListeners();
+    return key;
+  }
+
+  /// SCREEN
+  Future<RouteKey?> openScreen<T extends Widget>(
+    WidgetBuilder builder, {
+    String? name,
+  }) async {
+    final routeName = name ?? _inferName<T>();
+    final metadata = const RouteMetadata(kind: RouteKind.screen);
+    final key = RouteKey(name: routeName, id: _nextId());
+    final entry = RouteEntry(key: key, builder: builder, metadata: metadata);
+    _pages.push(entry);
+    notifyListeners();
+    return key;
+  }
+
+  /// DIALOG
+  String openDialog<T extends Widget>(
+    WidgetBuilder builder, {
+    String? name,
+    bool barrierDismissible = true,
+  }) {
+    final id = _nextId();
+
+    overlays.push(
+      OverlayEntryModel(
+        id: id,
+        name: name ?? _inferName<T>(),
+        type: OverlayType.dialog,
+        barrierDismissible: barrierDismissible,
+        builder: builder,
+      ),
+    );
+    return id;
+  }
+
+  /// LOADING
+  String showLoading(WidgetBuilder builder) {
+    final id = _nextId();
+    overlays.push(
+      OverlayEntryModel(
+        id: id,
+        name: "loading",
+        type: OverlayType.loading,
+        barrierDismissible: false,
+        builder: builder,
+      ),
+    );
+    return id;
+  }
+
+  void hideOverlay(String id) {
+    overlays.removeById(id);
+  }
+
+  void pop() {
+    if (overlays.hasEntries) {
+      overlays.pop();
+      return;
+    }
+    _pages.pop();
+    notifyListeners();
+  }
+
+  String _inferName<T>() {
+    final type = T.toString();
+    return "/${_toKebab(type)}";
+  }
+
+  String _toKebab(String value) {
+    return value
+        .replaceAllMapped(
+          RegExp(r'[A-Z]'),
+          (m) => "-${m.group(0)!.toLowerCase()}",
+        )
+        .replaceFirst("-", "");
+  }
+
+  String _nextId() {
+    return "${_idCounter++}_${DateTime.now().millisecondsSinceEpoch}";
+  }
+}
+
+class FlutterArtistRouterDelegate extends RouterDelegate<Object>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin<Object> {
+  final FlutterArtistRouter router;
+
+  final List<NavigatorObserver> observers;
+
+  @override
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  FlutterArtistRouterDelegate({
+    required this.router,
+    required this.navigatorKey,
+    required this.observers,
+  }) {
+    router.addListener(notifyListeners);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = router.pages.map((entry) {
+      return MaterialPage(
+        key: ValueKey(entry.key.id),
+        name: entry.key.name,
+        child: entry.builder(context),
+      );
+    }).toList();
+
+    return Stack(
+      children: [
+        Navigator(
+          key: navigatorKey,
+          observers: observers,
+          pages: pages,
+          onDidRemovePage: (page) {
+            router.pop();
+          },
+        ),
+        ...router.overlays.entries.map((overlay) {
+          return _OverlayContainer(overlay);
+        }),
+      ],
+    );
+  }
+
+  @override
+  Future<void> setNewRoutePath(Object configuration) async {}
+}
+
+class _OverlayContainer extends StatelessWidget {
+  final OverlayEntryModel overlay;
+
+  const _OverlayContainer(this.overlay);
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Material(
+        color: overlay.type == OverlayType.dialog
+            ? Colors.black45
+            : Colors.transparent,
+        child: GestureDetector(
+          onTap: overlay.barrierDismissible
+              ? () => Navigator.of(context).maybePop()
+              : null,
+          child: Center(child: overlay.builder(context)),
+        ),
+      ),
+    );
+  }
+}
+
+class GuardRegistry {
+  final List<RouteGuard> _globalGuards;
+
+  GuardRegistry({required List<RouteGuard> globalGuards})
+    : _globalGuards = globalGuards;
+
+  // void addGlobalGuard(RouteGuard guard) {
+  //   _globalGuards.add(guard);
+  // }
+
+  List<RouteGuard> resolve(RouteMetadata metadata) {
+    return List.from(_globalGuards);
+  }
+}
+
+class OverlayEntryModel {
+  final String id;
+  final String name;
+  final OverlayType type;
+  final WidgetBuilder builder;
+  final bool barrierDismissible;
+
+  const OverlayEntryModel({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.builder,
+    this.barrierDismissible = true,
+  });
+}
+
+class OverlayManager extends ChangeNotifier {
+  final List<OverlayEntryModel> _entries = [];
+
+  List<OverlayEntryModel> get entries => List.unmodifiable(_entries);
+
+  OverlayEntryModel push(OverlayEntryModel entry) {
+    _entries.add(entry);
+    notifyListeners();
+    return entry;
+  }
+
+  OverlayEntryModel? pop() {
+    if (_entries.isEmpty) return null;
+    final removed = _entries.removeLast();
+    notifyListeners();
+    return removed;
+  }
+
+  void removeById(String id) {
+    _entries.removeWhere((e) => e.id == id);
+    notifyListeners();
+  }
+
+  void clearType(OverlayType type) {
+    _entries.removeWhere((e) => e.type == type);
+  }
+
+  bool get hasEntries => _entries.isNotEmpty;
+}
+
+class OverlayStack {
+  final List<RouteEntry> _entries = [];
+
+  List<RouteEntry> get entries => List.unmodifiable(_entries);
+
+  void push(RouteEntry entry) {
+    _entries.add(entry);
+  }
+
+  RouteEntry? pop() {
+    if (_entries.isEmpty) return null;
+    return _entries.removeLast();
+  }
+
+  void remove(RouteEntry entry) {
+    _entries.remove(entry);
+  }
+}
+
+enum OverlayType { dialog, loading, dropdown, tooltip, custom }
+
+class PageStack {
+  final List<RouteEntry> _routes = [];
+
+  List<RouteEntry> get routes => List.unmodifiable(_routes);
+
+  void push(RouteEntry entry) {
+    _routes.add(entry);
+  }
+
+  RouteEntry? pop() {
+    if (_routes.isEmpty) return null;
+    return _routes.removeLast();
+  }
+
+  void clear() {
+    _routes.clear();
+  }
+}
+
+class RouteDefinition {
+  final String name;
+  final WidgetBuilder builder;
+  final RouteMetadata metadata;
+
+  const RouteDefinition({
+    required this.name,
+    required this.builder,
+    this.metadata = const RouteMetadata(),
+  });
+}
+
+class RouteEntry {
+  final RouteKey key;
+  final WidgetBuilder builder;
+  final RouteMetadata metadata;
+
+  RouteEntry({
+    required this.key,
+    required this.builder,
+    required this.metadata,
+  });
+}
+
+abstract interface class RouteGuard {
+  FutureOr<RouteGuardResult> canNavigate(
+    RouteKey route,
+    RouteMetadata metadata,
+  );
+}
+
+class RouteGuardResult {
+  final bool allow;
+  final String? redirectTo;
+
+  const RouteGuardResult._(this.allow, this.redirectTo);
+
+  const RouteGuardResult.allow() : this._(true, null);
+
+  const RouteGuardResult.redirect(String route) : this._(false, route);
+}
+
+enum RouteKind { module, screen, overlay }
+
+class RouteMetadata {
+  final RouteKind kind;
+  final bool requiresAuth;
+  final List<String> permissions;
+
+  const RouteMetadata({
+    this.kind = RouteKind.screen,
+    this.requiresAuth = false,
+    this.permissions = const [],
+  });
+
+  bool get isModule => kind == RouteKind.module;
+
+  bool get isScreen => kind == RouteKind.screen;
+
+  bool get isOverlay => kind == RouteKind.overlay;
+}
+
+class RouteRegistry {
+  final Map<String, RouteDefinition> _routes = {};
+
+  // void register(RouteDefinition route) {
+  //   _routes[route.name] = route;
+  // }
+
+  RouteRegistry({required List<RouteDefinition> routes}) {
+    for (var definition in routes) {
+      _routes[definition.name] = definition;
+    }
+  }
+
+  RouteDefinition? find(String name) {
+    return _routes[name];
+  }
+}
+
+typedef RouteBuilder = Widget Function(RouteKey route);
+
+class RouteScreen extends StatelessWidget {
+  final RouteKey route;
+
+  const RouteScreen(this.route, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(child: Text("Screen: ${route.name}"));
+  }
+}

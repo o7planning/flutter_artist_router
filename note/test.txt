@@ -1,0 +1,13 @@
+
+chromedriver --port=4444
+
+
+
+
+export PATH=$PATH:/Volumes/Apps/Apps/flutter/bin
+
+
+flutter drive \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/__router_main_test.dart \
+  -d chrome            --profile
