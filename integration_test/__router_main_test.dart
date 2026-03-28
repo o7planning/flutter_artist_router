@@ -8,6 +8,7 @@ import 'package:integration_test/integration_test.dart';
 import 'base/base_pages.dart';
 import 'utils.dart';
 
+part 'guards/router_guard_chain_test.dart';
 part 'bridge/router_bridge_test.dart';
 part 'dialogs/router_close_all_dialogs_test.dart';
 part 'dialogs/router_dialog_guard_test.dart';
@@ -65,6 +66,7 @@ void main() {
 
     runBridgeTests();
     runGuardsTests();
+    runGuardChainTests();
     runInitialGuardsTests();
     runResultTests();
     /** ----- Dialog Test ------------ */
@@ -77,7 +79,9 @@ void main() {
     runChaosTests();
     runHistoryTests();
     runDuplicatePolicyTests();
-    // runNestedParamsTests(); // TODO: ERROR!
+
+    runNestedParamsTests();
+
     runRefreshTests(); // GP * NEW *
 
     // runForwardHistoryTests(); // NEW *  (ERROR)
