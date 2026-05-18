@@ -23,8 +23,9 @@ class RouterUtils {
     for (int i = 0; i < patternSeg.length; i++) {
       if (patternSeg[i].startsWith(':')) {
         params[patternSeg[i].substring(1)] = Uri.decodeComponent(pathSeg[i]);
-      } else if (patternSeg[i] != pathSeg[i])
+      } else if (patternSeg[i] != pathSeg[i]) {
         return null;
+      }
     }
     return params;
   }

@@ -35,8 +35,9 @@ class FlutterArtistRouterDelegate extends RouterDelegate<RouteKey>
   @override
   Future<void> setNewRoutePath(RouteKey configuration) async {
     if (router.stack.isEmpty ||
-        router.currentRouteKey?.path == configuration.path)
+        router.currentRouteKey?.path == configuration.path) {
       return;
+    }
     router.pop(); // Standard web back-button behavior
   }
 

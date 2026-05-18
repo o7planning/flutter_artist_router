@@ -15,4 +15,5 @@ part 'src/core.dart';
 part 'src/delegate.dart';
 part 'src/parser.dart';
 part 'src/router.dart';
+part 'src/typedefs.dart';
 part 'src/utils.dart';

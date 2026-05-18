@@ -94,7 +94,7 @@ abstract interface class RouterBridge {
 /// Definition of a route including its path, builder, and local guards.
 class FaRoute {
   final String path;
-  final Widget Function(BuildContext context, FaRouteState state) builder;
+  final FaRouteBuilder builder;
   final List<FaRouteGuard> guards;
 
   const FaRoute({
@@ -123,31 +123,34 @@ extension FaContextNavigation on BuildContext {
 
 /// Wrapper for navigation methods to provide a clean API via [BuildContext].
 class FaNavigation {
-  final BuildContext _c;
+  final BuildContext _context;
 
-  FaNavigation(this._c);
+  FaNavigation(this._context);
 
-  Future<T?> to<T>(String p, {Object? e}) => _c.faRouter.to<T>(p, extra: e);
+  Future<T?> to<T>(String path, {Object? extra}) =>
+      _context.faRouter.to<T>(path, extra: extra);
 
   Future<T?> dialog<T>(
-    String p, {
-    required Widget Function(BuildContext, FaRouteState) b,
+    String path, {
+    required FaRouteBuilder builder,
     List<FaRouteGuard> guards = const [],
-    Object? e,
-    bool bd = true,
-  }) => _c.faRouter.dialog<T>(
-    p,
-    builder: b,
+    Object? extra,
+    bool barrierDismissible = true,
+  }) => _context.faRouter.dialog<T>(
+    path,
+    builder: builder,
     guards: guards,
-    extra: e,
-    barrierDismissible: bd,
+    extra: extra,
+    barrierDismissible: barrierDismissible,
   );
 
-  void off(String p, {Object? e}) => _c.faRouter.off(p, extra: e);
+  void off(String path, {Object? extra}) =>
+      _context.faRouter.off(path, extra: extra);
 
-  void offAll(String p, {Object? e}) => _c.faRouter.offAll(p, extra: e);
+  void offAll(String path, {Object? extra}) =>
+      _context.faRouter.offAll(path, extra: extra);
 
-  void back<T>([T? result]) => _c.faRouter.back<T>(result);
+  void back<T>([T? result]) => _context.faRouter.back<T>(result);
 
-  void closeAllDialogs() => _c.faRouter.closeAllDialogs();
+  void closeAllDialogs() => _context.faRouter.closeAllDialogs();
 }

@@ -87,12 +87,10 @@ class FlutterArtistRouter extends ChangeNotifier {
     }
   }
 
-  // Trong src/router.dart
-
   /// Navigates to a new path. Supports dynamic [builder] for on-the-fly route definition.
   Future<T?> to<T>(
     String path, {
-    Widget Function(BuildContext, FaRouteState)? builder,
+    FaRouteBuilder? builder,
     Object? extra,
   }) async {
     if (builder != null) {
@@ -111,7 +109,7 @@ class FlutterArtistRouter extends ChangeNotifier {
   /// Replaces the current route. Supports dynamic [builder].
   Future<void> off(
     String path, {
-    Widget Function(BuildContext, FaRouteState)? builder,
+    FaRouteBuilder? builder,
     Object? extra,
   }) async {
     if (builder != null) {
@@ -128,7 +126,7 @@ class FlutterArtistRouter extends ChangeNotifier {
   /// Clears stack and navigates to new path. Supports dynamic [builder].
   Future<void> offAll(
     String path, {
-    Widget Function(BuildContext, FaRouteState)? builder,
+    FaRouteBuilder? builder,
     Object? extra,
   }) async {
     if (builder != null) {
@@ -144,7 +142,7 @@ class FlutterArtistRouter extends ChangeNotifier {
 
   Future<T?> dialog<T>(
     String path, {
-    required Widget Function(BuildContext, FaRouteState) builder,
+    required FaRouteBuilder builder,
     List<FaRouteGuard> guards = const [],
     Object? extra,
     bool barrierDismissible = true,
@@ -266,7 +264,9 @@ class FlutterArtistRouter extends ChangeNotifier {
     }
 
     if (clearStack) {
-      for (var key in _stack) bridge.onRouteRemoved(key);
+      for (var key in _stack) {
+        bridge.onRouteRemoved(key);
+      }
       _stack.clear();
       _pages.clear();
       _resultCompleters.forEach((_, c) => c.complete(null));
@@ -317,8 +317,9 @@ class FlutterArtistRouter extends ChangeNotifier {
     for (int i = 0; i < patternParts.length; i++) {
       if (patternParts[i].startsWith(':')) {
         params[patternParts[i].substring(1)] = pathParts[i];
-      } else if (patternParts[i] != pathParts[i])
+      } else if (patternParts[i] != pathParts[i]) {
         return null;
+      }
     }
     return params;
   }
