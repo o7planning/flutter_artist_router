@@ -48,11 +48,17 @@ class FlutterArtistRouterDelegate extends RouterDelegate<RouteKey>
         child: Center(child: CircularProgressIndicator.adaptive()),
       );
     }
+
     return Navigator(
       key: navigatorKey,
       pages: router.pages,
       observers: observers,
-      onDidRemovePage: (Page page) => router.removePage(page),
+      // Ensure that even when the framework removes a page,
+      // we route it through our unified pop logic
+      onDidRemovePage: (Page page) {
+        // ORIGIN: router.removePage(page)
+        router.pop();
+      },
     );
   }
 }

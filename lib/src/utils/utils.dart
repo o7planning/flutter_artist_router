@@ -1,4 +1,4 @@
-part of '../flutter_artist_router.dart';
+part of '../../flutter_artist_router.dart';
 
 class RouterUtils {
   static bool isSameRoute(RouteKey a, RouteKey b, FaRoute route) {

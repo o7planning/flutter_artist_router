@@ -1,7 +1,5 @@
 part of '../flutter_artist_router.dart';
 
-enum NavigationAction { push, replace, pop }
-
 /// The main router class managing the navigation stack and guards.
 class FlutterArtistRouter extends ChangeNotifier {
   final Map<String, FaRoute> _routeDefinitions = {};
@@ -165,6 +163,27 @@ class FlutterArtistRouter extends ChangeNotifier {
   }
 
   void pop<T>([T? result]) {
+    // 1. Get the current active context from the Navigator
+    final currentContext = FlutterArtistCore.navigatorKey.currentContext;
+
+    print("To here 1");
+
+    if (currentContext != null) {
+      print("To here 2.1");
+      final ScaffoldState? scaffold = Scaffold.maybeOf(currentContext);
+      print("To here 2.2: $scaffold");
+
+      // 2. Check and close EndDrawer or Drawer via standard Navigator first
+      if ((scaffold?.isEndDrawerOpen ?? false) ||
+          (scaffold?.isDrawerOpen ?? false)) {
+        print("To here 2.3");
+        Navigator.of(currentContext).pop();
+        return;
+      }
+    }
+    print("To here 3");
+
+    // 3. If no Drawer is open, proceed with normal FlutterArtistRouter stack popping
     if (_stack.length > 1) {
       final key = _stack.removeLast();
       _pages.removeLast();
