@@ -2,8 +2,8 @@ part of '../__router_main_test.dart';
 
 Future<void> runNestedParamsTests() async {
   testWidgets('Router: Deeply nested path parameters validation', (
-      WidgetTester tester,
-      ) async {
+    WidgetTester tester,
+  ) async {
     print("*** START: runNestedParamsTests");
     final bridge = TestRouterBridge();
 
@@ -11,10 +11,7 @@ Future<void> runNestedParamsTests() async {
       bridge: bridge,
       initialLocation: "/home", // ĐẶT TRANG ĐẦU LÀ HOME
       routes: [
-        FaRoute(
-          path: "/home",
-          builder: (c, s) => const Text("Home Page"),
-        ),
+        FaRoute(path: "/home", builder: (c, s) => const Text("Home Page")),
         FaRoute(
           path: "/orders/:orderId/details/:type",
           builder: (c, state) => Text(

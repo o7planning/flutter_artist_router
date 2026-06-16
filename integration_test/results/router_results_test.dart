@@ -43,7 +43,8 @@ class ResultBPage extends BasePage {
   @override
   Widget buildBody(BuildContext context) => ElevatedButton(
     key: const Key("backWithDataButton"),
-    onPressed: () => Utils.router!.pop("Hello Artist"), // Trả dữ liệu về
+    onPressed: () => Utils.router!.popRoute("Hello Artist"),
+    // Trả dữ liệu về
     child: const Text("Back with Data"),
   );
 }

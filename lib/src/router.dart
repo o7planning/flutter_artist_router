@@ -2,21 +2,40 @@ part of '../flutter_artist_router.dart';
 
 /// The main router class managing the navigation stack and guards.
 class FlutterArtistRouter extends ChangeNotifier {
+  /// Internal look-up table containing mapped path definitions to their corresponding route settings.
   final Map<String, FaRoute> _routeDefinitions = {};
+
+  /// The underlying list of Flutter [Page] objects currently feeding the [Navigator] entry tree.
   final List<Page> _pages = [];
+
+  /// Active state history containing individual structural references to unique route instances.
   final List<RouteKey> _stack = [];
+
+  /// Keeps track of reactive asynchronous response triggers corresponding to popped route result allocations.
   final Map<RouteKey, Completer<dynamic>> _resultCompleters = {};
 
   /// Global guards applied to every navigation attempt.
   final List<FaRouteGuard> globalGuards;
 
+  /// The application bridge used to track outer lifecycle changes and trigger intermediate stack validation pruning.
   final RouterBridge bridge;
+
+  /// Initial fallback screen path mounted at initial system initialization.
   final String? initialLocation;
+
+  /// Default fallback structure activated whenever target routing pathways fail validation checks.
   final FaRoute? errorRoute;
+
+  /// Directing policy strategy deployed when trying to push a route configuration already present in the active stack.
   final DuplicateRoutePolicy duplicatePolicy;
+
+  /// Underlying system synchronization hook linking the router layout to the platform's browser address context.
   final RouteInformationProvider? routeInfoProvider;
 
+  /// Thread-safe incrementing identifier tag attached to every new pushed navigation instance.
   int _counter = 0;
+
+  /// Internal indicator guarding against multiple startup pipeline calls.
   bool _isStarted = false;
 
   FlutterArtistRouter({
@@ -33,12 +52,16 @@ class FlutterArtistRouter extends ChangeNotifier {
     }
   }
 
+  /// Validates whether a matching path key resides inside the registered definitions map.
   bool isRouteDefined(String path) => _routeDefinitions.containsKey(path);
 
+  /// Exposes a read-only unmodifiable mirror of the underlying active rendering page sequence.
   List<Page> get pages => List.unmodifiable(_pages);
 
+  /// Exposes a read-only unmodifiable view of the target structural route elements array stack.
   List<RouteKey> get stack => List.unmodifiable(_stack);
 
+  /// Safely resolves the current top-most structural element active inside history.
   RouteKey? get currentRouteKey => _stack.isEmpty ? null : _stack.last;
 
   /// Internal startup logic triggered by the delegate.
@@ -64,6 +87,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     );
   }
 
+  /// Coordinates path changes back to the system route provider to update browser location bars smoothly.
   void _syncBrowser(NavigationAction action) {
     if (_stack.isEmpty || routeInfoProvider == null) return;
     final uri = Uri.parse(_stack.last.path);
@@ -92,7 +116,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     Object? extra,
   }) async {
     if (builder != null) {
-      _routeDefinitions[path] = FaRoute(path: path, builder: builder); //
+      _routeDefinitions[path] = FaRoute(path: path, builder: builder);
     }
     final completer = Completer<T?>();
     await _internalGo(
@@ -111,7 +135,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     Object? extra,
   }) async {
     if (builder != null) {
-      _routeDefinitions[path] = FaRoute(path: path, builder: builder); //
+      _routeDefinitions[path] = FaRoute(path: path, builder: builder);
     }
     if (_stack.isNotEmpty) {
       final lastKey = _stack.removeLast();
@@ -128,7 +152,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     Object? extra,
   }) async {
     if (builder != null) {
-      _routeDefinitions[path] = FaRoute(path: path, builder: builder); //
+      _routeDefinitions[path] = FaRoute(path: path, builder: builder);
     }
     return _internalGo(
       path,
@@ -138,7 +162,8 @@ class FlutterArtistRouter extends ChangeNotifier {
     );
   }
 
-  Future<T?> dialog<T>(
+  /// Registers and overlays a managed declarative dialog instance onto the historical structural layer.
+  Future<T?> showDialog<T>(
     String path, {
     required FaRouteBuilder builder,
     List<FaRouteGuard> guards = const [],
@@ -162,28 +187,8 @@ class FlutterArtistRouter extends ChangeNotifier {
     return completer.future;
   }
 
-  void pop<T>([T? result]) {
-    // 1. Get the current active context from the Navigator
-    final currentContext = FlutterArtistCore.navigatorKey.currentContext;
-
-    print("To here 1");
-
-    if (currentContext != null) {
-      print("To here 2.1");
-      final ScaffoldState? scaffold = Scaffold.maybeOf(currentContext);
-      print("To here 2.2: $scaffold");
-
-      // 2. Check and close EndDrawer or Drawer via standard Navigator first
-      if ((scaffold?.isEndDrawerOpen ?? false) ||
-          (scaffold?.isDrawerOpen ?? false)) {
-        print("To here 2.3");
-        Navigator.of(currentContext).pop();
-        return;
-      }
-    }
-    print("To here 3");
-
-    // 3. If no Drawer is open, proceed with normal FlutterArtistRouter stack popping
+  /// Explicitly removes the top-most structural route (Page or Dialog) from the history stack context.
+  void popRoute<T>([T? result]) {
     if (_stack.length > 1) {
       final key = _stack.removeLast();
       _pages.removeLast();
@@ -195,8 +200,19 @@ class FlutterArtistRouter extends ChangeNotifier {
     }
   }
 
+  /// Standard imperative pop utility mirroring native Flutter framework behavior.
+  /// Safely targets and dismisses active contextual layout overlays (Drawers, EndDrawers, native popups).
+  void pop<T>([T? result]) {
+    final currentContext = FlutterArtistCore.navigatorKey.currentContext;
+    if (currentContext != null) {
+      Navigator.of(currentContext).pop(result);
+    }
+  }
+
+  /// Semantic alias alternative pointing directly to the structural framework pop sequence.
   void back<T>([T? result]) => pop<T>(result);
 
+  /// Mass iteration routine targeting and cleaning out every active [FaDialogPage] layer across history.
   void closeAllDialogs() {
     bool changed = false;
     for (int i = _stack.length - 1; i >= 0; i--) {
@@ -218,6 +234,7 @@ class FlutterArtistRouter extends ChangeNotifier {
   /// Explicitly requests the router to validate the current stack via the bridge.
   void requestStackValidation() => _refreshStack();
 
+  /// Internal processing pipeline coordinating guards, duplicates, structural allocations, and state notifications.
   Future<void> _internalGo(
     String path, {
     Object? extra,
@@ -312,6 +329,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     _syncBrowser(action);
   }
 
+  /// Scans intermediate historical paths to drop segments no longer marked active by the outer bridge interface.
   void _refreshStack() {
     bool changed = false;
     if (_stack.length > 1) {
@@ -328,6 +346,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
+  /// Compares structure patterns to parse out inline parameters from target navigation tracks.
   Map<String, String>? _extractPathParams(String pattern, String path) {
     final patternParts = pattern.split('/');
     final pathParts = path.split('/');
@@ -343,6 +362,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     return params;
   }
 
+  /// Maps incoming data settings cleanly into concrete [MaterialPage] or custom [FaDialogPage] layout representations.
   Page _createPage(
     FaRoute route,
     FaRouteState state,
@@ -368,6 +388,7 @@ class FlutterArtistRouter extends ChangeNotifier {
     );
   }
 
+  /// Synchronization sink intercepting native interface swiping movements or platform pop actions.
   void removePage(Page page) {
     final i = _pages.indexOf(page);
     if (i != -1) {

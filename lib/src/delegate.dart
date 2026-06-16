@@ -38,7 +38,8 @@ class FlutterArtistRouterDelegate extends RouterDelegate<RouteKey>
         router.currentRouteKey?.path == configuration.path) {
       return;
     }
-    router.pop(); // Standard web back-button behavior
+    // Standard web back-button behavior
+    router.popRoute();
   }
 
   @override
@@ -53,11 +54,10 @@ class FlutterArtistRouterDelegate extends RouterDelegate<RouteKey>
       key: navigatorKey,
       pages: router.pages,
       observers: observers,
-      // Ensure that even when the framework removes a page,
-      // we route it through our unified pop logic
+      // When a user swipes back (iOS gesture) or a page is popped natively,
+      // synchronize our internal state without refiring the global await pop logic.
       onDidRemovePage: (Page page) {
-        // ORIGIN: router.removePage(page)
-        router.pop();
+        router.removePage(page);
       },
     );
   }

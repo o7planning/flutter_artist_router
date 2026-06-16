@@ -26,7 +26,7 @@ Future<void> runOffAllWithDialogTests() async {
 
     // 1. Mở một Dialog bất kỳ
     print("Step 1: Opening a Dialog over Home Page");
-    Utils.router!.dialog(
+    Utils.router!.showDialog(
       "/my-dialog",
       builder: (c, s) => const Text("Dialog Content"),
     );

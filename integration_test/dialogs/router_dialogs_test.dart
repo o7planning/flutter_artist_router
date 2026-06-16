@@ -10,7 +10,7 @@ class DialogHomePage extends BasePage {
     child: ElevatedButton(
       key: const Key("openDialogButton"),
       onPressed: () {
-        Utils.router!.dialog(
+        Utils.router!.showDialog(
           "/my-dialog",
           builder: (c, s) => Container(
             key: const Key("dialogContent"),
@@ -19,7 +19,7 @@ class DialogHomePage extends BasePage {
             color: Colors.white,
             child: ElevatedButton(
               key: const Key("closeDialogButton"),
-              onPressed: () => Utils.router!.pop("Dialog Closed"),
+              onPressed: () => Utils.router!.popRoute("Dialog Closed"),
               child: const Text("Close Me"),
             ),
           ),

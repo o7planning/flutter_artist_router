@@ -31,7 +31,7 @@ Future<void> runDialogGuardTests() async {
     authGuard.allow = false;
 
     // Cố gắng mở Dialog rút tiền
-    Utils.router!.dialog(
+    Utils.router!.showDialog(
       "/withdraw",
       builder: (c, s) => const Text("Withdraw Money Content"),
       guards: [authGuard], // Gắn bảo vệ vào đây
@@ -52,7 +52,7 @@ Future<void> runDialogGuardTests() async {
     Utils.router!.offAll("/home"); // Quay lại Home làm lại cuộc đời
     await tester.pumpAndSettle();
 
-    Utils.router!.dialog(
+    Utils.router!.showDialog(
       "/withdraw",
       builder: (c, s) => const Text("Withdraw Money Content"),
       guards: [authGuard],

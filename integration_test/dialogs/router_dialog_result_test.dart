@@ -29,11 +29,11 @@ Future<void> runDialogResultTests() async {
     // 2. Mở Dialog và ĐỢI (không dùng await ở đây vì sẽ làm kẹt Test, dùng .then)
     print("Step 1: Opening Dialog and waiting for result");
     Utils.router!
-        .dialog<String>(
+        .showDialog<String>(
           "/select-lang",
           builder: (c, s) => ElevatedButton(
             key: const Key("selectViButton"),
-            onPressed: () => Utils.router!.pop("vi_VN"), // Trả về kết quả
+            onPressed: () => Utils.router!.popRoute("vi_VN"), // Trả về kết quả
             child: const Text("Select Vietnamese"),
           ),
         )

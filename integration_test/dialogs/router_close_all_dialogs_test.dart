@@ -27,10 +27,19 @@ Future<void> runCloseAllDialogTests() async {
     print("Step 1: Opening 3 dialogs");
 
     // Gọi và không chờ đợi
-    Utils.router!.dialog("/d1", builder: (c, s) => const Text("D1 Content"));
-    Utils.router!.dialog("/d2", builder: (c, s) => const Text("D2 Content"));
+    Utils.router!.showDialog(
+      "/d1",
+      builder: (c, s) => const Text("D1 Content"),
+    );
+    Utils.router!.showDialog(
+      "/d2",
+      builder: (c, s) => const Text("D2 Content"),
+    );
     // Cái cuối cùng có thể await hoặc gọi pump để Frame bắt kịp
-    Utils.router!.dialog("/d3", builder: (c, s) => const Text("D3 Content"));
+    Utils.router!.showDialog(
+      "/d3",
+      builder: (c, s) => const Text("D3 Content"),
+    );
 
     // Ép Flutter render toàn bộ stack mới
     await tester.pumpAndSettle();

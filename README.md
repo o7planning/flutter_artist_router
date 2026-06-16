@@ -3,6 +3,16 @@
 
 A high-performance, flexible declarative navigation system built on top of Flutter's Navigator 2.0 (Router API). It features granular control over the navigation history stack, dynamic route pruning, and automated memory lifecycle management.
 
+All code comments and documentation are strictly maintained in English for international developer compliance.
+
+
+
+[LIVE DEMO](https://o7planning.github.io/demo/flutter/flutter_artist_router_demo/)
+
+[Download Demo Source Code](https://github.com/o7planning/flutter_artist_router_demo)
+
+![IMAGE](https://o7planning.github.io/static/demo/flutter/flutter_artist_router_demo/images/demo.gif)
+
 ---
 
 ##  Key Architectural Advantages
@@ -17,7 +27,7 @@ Consider a workflow sequence mapping across paths like this:
 
 `/home ──> /product ──> /supplier`
 
-When components or state containers linked to `/product` (such as active UI Shelves, layout Blocks, or structural Scalars) no longer appear on the screen or are invalidated, the router automatically:
+When components or state containers linked to `/product` are invalidated or no longer required, the router automatically:
 
 1. Disposes and releases all associated memory allocation spaces from the registry.
 2. Gracefully slices and prunes the `/product` route metadata straight out of the active Route Stack.
@@ -27,7 +37,7 @@ The active stack updates smoothly to `[ /home, /supplier ]`. If the user hits th
 
 ---
 
-## 里 Standalone Usage (100% Decoupled)
+##  Standalone Usage (100% Decoupled)
 
 `flutter_artist_router` is designed as a completely self-contained, modular package. It does not depend on any large external framework binaries and can be plugged directly into any independent, standard Flutter application layout.
 
@@ -63,32 +73,29 @@ class MyApp extends StatelessWidget {
 
 ---
 
-## ⚡ Integration with the FlutterArtist Ecosystem
+## ⚡ Integration & Context API Usages
 
-When deployed inside the framework ecosystem, `flutter_artist_router` serves as the core navigation bridge. It hooks directly into centralized runtime instances for instant access across any component.
+Interact with the routing ecosystem cleanly using the standard `BuildContext` extension or via centralized framework runtime instances.
 
-### Accessing the Global Router Client
+###  Demystifying the Pop Mechanics (Crucial)
 
-You can fetch and interact with the operational router directly via the unified static instance point:
+To prevent breaking layout life-cycles, `flutter_artist_router` separates temporary UI overlay removal from hard history stack destruction:
 
-```dart
-// Fetch the central framework routing driver instance
-FlutterArtistRouter router = FlutterArtist.router;
+* **`context.faRouter.pop()` / `back()**`: Natively delegates execution directly to Flutter's standard `Navigator.of(context).pop()`. Use this to safely close open contextual layouts like `Drawer`, `EndDrawer`, BottomSheets, or local popups without altering your core route stack records.
+* **`context.faRouter.popRoute()`**: Explicitly purges the top-most structural route (either a Page screen or an `FaDialogPage`) out of the history stack history.
 
-```
+---
 
 ### Framework API Implementation Examples
-
-When interacting via the central global setup, driving view adjustments, clearing histories, or launching custom dialogs is clean and robust using static `routeName` parameters:
 
 #### A. Complete Stack Replacement (e.g., Logout Routines)
 
 Clears the entire navigation context history and mounts the target path as the absolute root of the application stack.
 
 ```dart
-void executeSystemLogout() {
+void executeSystemLogout(BuildContext context) {
   // Purges historical stacks and forces active session teardown
-  FlutterArtist.router.offAll(LoginScreen.routeName);
+  context.faRouter.offAll('/login');
 }
 
 ```
@@ -98,26 +105,32 @@ void executeSystemLogout() {
 Closes the current view context and overlays the new target location path in a single atomic transaction.
 
 ```dart
-void transitionToDashboard() {
+void transitionToDashboard(BuildContext context) {
   // Replaces the top-most stack slice gracefully
-  FlutterArtist.router.off(DashboardScreen.routeName);
+  context.faRouter.off('/dashboard');
 }
 
 ```
 
 #### C. Declarative Dialog Presentation Framework
 
-Launches a contextual overlay dialog page safely inside the declarative Navigator 2.0 structure. It supports route guards and control flags out of the box.
+Launches a contextual overlay dialog page safely inside the declarative Navigator 2.0 structure. It is highly recommended to use `context.faRouter.showDialog()` instead of Flutter's native global dialogue calls to preserve history tracking.
 
 ```dart
-void promptConfirmationDialog() {
+void promptConfirmationDialog(BuildContext context) {
   // Opens a managed modal dialogue layer wired into the router context
-  FlutterArtist.router.dialog(
-    ConfirmationDialog.routeName,
+  context.faRouter.showDialog(
+    '/confirm-action',
     barrierDismissible: true,
-    builder: (context, state) => const ConfirmationDialog(
-      title: "Confirm Action",
-      content: "Are you sure you want to proceed with this operation?",
+    builder: (context, state) => AlertDialog(
+      title: const Text("Confirm Action"),
+      content: const Text("Are you sure you want to proceed?"),
+      actions: [
+        TextButton(
+          onPressed: () => context.faRouter.popRoute(), // Closes the dialog route structural block
+          child: const Text("Dismiss"),
+        ),
+      ],
     ),
   );
 }
@@ -129,13 +142,12 @@ void promptConfirmationDialog() {
 You can use the built-in `RouterBridge` to dynamically trigger layout tracking updates that prune intermediate segments out of memory:
 
 ```dart
-void discardProductSessionHistory() {
-  // Altering your custom bridge state flags automatically triggers 
-  // stack evaluation routines, dropping the intermediate route from history.
-  myGlobalRouterBridge.skipProductStep = true;
-  
-  // Re-evaluates and reconstructs pages cleanly
-  FlutterArtist.router.refresh(); 
+void discardProductSessionHistory(BuildContext context) {
+  // Altering your custom bridge state flags automatically triggers stack evaluation routines
+  myGlobalRouterBridge.skipProduct = true;
+   
+  // Explicitly requests the router to validate and reconstruct the current stack cleanly
+  context.faRouter.requestStackValidation();  
 }
 
 ```
@@ -151,6 +163,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_artist_core: ^latest_version
-  flutter_artist_router: ^latest_version
-```
- 
+  flutter_artist_router: ^1.0.0
+
+``` 

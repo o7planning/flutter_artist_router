@@ -8,8 +8,10 @@ part of '../__router_main_test.dart';
 /// Guard 1: Requires Authentication
 class AuthCheckGuard extends FaRouteGuard {
   bool isAuthenticated = false;
+
   @override
   Future<bool> canActivate(FaRouteState state) async => isAuthenticated;
+
   @override
   Future<String?> redirect(FaRouteState state) async => "/login";
 }
@@ -17,8 +19,10 @@ class AuthCheckGuard extends FaRouteGuard {
 /// Guard 2: Requires Server Selection (only for Login page)
 class ServerCheckGuard extends FaRouteGuard {
   bool isServerSelected = false;
+
   @override
   Future<bool> canActivate(FaRouteState state) async => isServerSelected;
+
   @override
   Future<String?> redirect(FaRouteState state) async => "/select-server";
 }

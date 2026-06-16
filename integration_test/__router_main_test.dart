@@ -8,13 +8,13 @@ import 'package:integration_test/integration_test.dart';
 import 'base/base_pages.dart';
 import 'utils.dart';
 
-part 'guards/router_guard_chain_test.dart';
 part 'bridge/router_bridge_test.dart';
 part 'dialogs/router_close_all_dialogs_test.dart';
 part 'dialogs/router_dialog_guard_test.dart';
 part 'dialogs/router_dialog_result_test.dart';
 part 'dialogs/router_dialogs_test.dart';
 part 'dialogs/router_off_all_dialog_test.dart';
+part 'guards/router_guard_chain_test.dart';
 part 'guards/router_guards_test.dart';
 part 'guards/router_initial_guards_test.dart';
 // Parts of the main test suite
@@ -27,6 +27,7 @@ part 'navigation/router_navigation_test.dart';
 part 'navigation/router_off_sync_test.dart';
 part 'navigation/router_refresh_test.dart';
 part 'navigation/router_spam_test.dart';
+part 'navigation/run_web_desync_tests.dart';
 part 'others/router_chaos_test.dart';
 part 'others/router_duplicate_policy_test.dart';
 part 'others/router_nest_param_test.dart';
@@ -58,6 +59,7 @@ void main() {
   group('FlutterArtistRouter Full Integration Suite', () {
     // Gọi các hàm test từ các file part
 
+    runWebDesyncTests();
     runNavigationTests();
     runInitialSyncTests(); // Test URL in browser address.
     runDynamicBuilderTests();
