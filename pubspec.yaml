@@ -1,6 +1,6 @@
 name: flutter_artist_router
 description: A declarative Navigator 2.0 router client supporting dynamic intermediate route pruning, automated memory disposes, and standalone history stack mutations.
-version: 1.0.0
+version: 1.0.1
 resolution: workspace
 homepage: https://o7planning.github.io
 
@@ -14,7 +14,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  flutter_artist_core: ^0.9.1
+  flutter_artist_core: ^1.0.0
 
 dev_dependencies:
   flutter_driver:
